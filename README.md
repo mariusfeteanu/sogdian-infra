@@ -5,15 +5,20 @@ Only one copy of this project can be deployed in one account.
 Multiple copies can be used if you use different accounts, and a different prefix param set in each.
 
 You need to set the following env variables for the commands below to work. If using docker for development, you need to set them before you start the container.
-  - export AWS_PROFILE=admin-dev
-  - export AWS_DEFAULT_REGION=eu-west-1
-  - export STACK_PREFIX=sogdian-dev
+
+```bash
+export AWS_PROFILE=admin-dev
+export AWS_DEFAULT_REGION=eu-west-1
+export STACK_PREFIX=sogdian-dev
+```
 
 or, for Windows Powershell:
 
+```bash
   - $env:AWS_PROFILE="admin-dev"
   - $env:AWS_DEFAULT_REGION="eu-west-1"
   - $env:STACK_PREFIX="sogdian-dev"
+```
 
 The variables above are specific to your deployment.
 
