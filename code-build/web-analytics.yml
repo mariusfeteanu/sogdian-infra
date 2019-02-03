@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Project to deploy the web analytics stack
+
+Parameters:
+  BucketInfra:
+    Type: String
+  RepoWebAnalyticsName:
+    Type: String
+  EnvironmentType:
+    Type: String
+
+Resources:
+  BuildWebAnalytics:
+    Type: "AWS::CodeBuild::Project"
+    Properties:
+      Name: web-analytics
+      Tags:
+        - Key: "EnvironmentType"
+          Value: !Ref EnvironmentType
+      Artifacts:
+        Type: NO_ARTIFACTS
+      BadgeEnabled: False
+      Description: Project to deploy the web analytics stack
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/ubuntu-base:14.04
+        Type: LINUX_CONTAINER
+      ServiceRole: !Sub arn:aws:iam::${AWS::AccountId}:role/code-build-web-analytics
+      Source:
+        BuildSpec:
+          !Sub |
+          version: 0.2
+          phases:
+            build:
+              commands:
+                - pwd
+                - (cd ./code; zip -r dist.zip .)
+                - aws s3 sync --exclude "*" --include "*.yml" --include "*.py" --include "*.zip" --delete . s3://${BucketInfra}/cloudformation/web-analytics/
+        GitCloneDepth: 1
+        Type: CODECOMMIT
+        Location: !Sub https://git-codecommit.${AWS::Region}.amazonaws.com/v1/repos/${RepoWebAnalyticsName}

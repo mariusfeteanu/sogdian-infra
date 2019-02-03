@@ -1,0 +1,67 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Pipeline for inra CI
+
+Parameters:
+  Prefix:
+    Type: String
+  BucketInfra:
+    Type: String
+  RepoInfraBaseName:
+    Type: String
+    Description: Project for all the base AWS infrastructure
+  EnvironmentType:
+    Type: String
+
+Resources:
+  PipelineInfraBase:
+    Type: "AWS::CodePipeline::Pipeline"
+    Properties:
+      ArtifactStore:
+        Location: !Ref BucketInfra
+        Type: S3
+      Name: infra-base
+      RestartExecutionOnUpdate: True
+      RoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/code-pipeline-infra
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: Source
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Provider: CodeCommit
+                Version: 1
+              Configuration:
+                RepositoryName : !Ref RepoInfraBaseName
+                BranchName : master
+              OutputArtifacts:
+                - Name: infra_templates
+        - Name: Build
+          Actions:
+            - Name: Build
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: 1
+              Configuration:
+                ProjectName: infra-base
+              InputArtifacts:
+                - Name: infra_templates
+        - Name: Deploy
+          Actions:
+            - Name: Deploy
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: 1
+              InputArtifacts:
+                - Name: infra_templates
+              Configuration:
+                ActionMode: CREATE_UPDATE
+                StackName: infra-base
+                Capabilities: CAPABILITY_NAMED_IAM
+                RoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/cloud-formation-infra
+                TemplatePath: infra_templates::infra-base-top.yml
+                ParameterOverrides: !Sub '{"Prefix": "${Prefix}" }'

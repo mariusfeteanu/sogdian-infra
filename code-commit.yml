@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Infrastructure code repositories
+
+Parameters:
+  RepoInfraBaseName:
+    Type: String
+    Description: Project for all the base AWS infrastructure
+  RepoWebAnalyticsName:
+    Type: String
+    Description: Project for analyzing web events
+  EnvironmentType:
+    Type: String
+
+Resources:
+
+  RepoInfraBase:
+    Type: "AWS::CodeCommit::Repository"
+    Properties:
+      RepositoryDescription: Project for all the base AWS infrastructure
+      RepositoryName: !Ref RepoInfraBaseName
+
+  RepoWebAnalytics:
+    Type: "AWS::CodeCommit::Repository"
+    Properties:
+      RepositoryDescription: Project for analyzing web events
+      RepositoryName: !Ref RepoWebAnalyticsName

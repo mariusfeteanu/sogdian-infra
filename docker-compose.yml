@@ -1,0 +1,13 @@
+version: '3'
+services:
+  devenv:
+    build:
+      context: .
+      dockerfile: devenv.Dockerfile
+    volumes:
+     - ~/.aws/.:/home/aws/.aws/
+     - ./:/home/aws/sogdian-infra/
+    environment:
+      - AWS_PROFILE=${AWS_PROFILE}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+      - STACK_PREFIX=${STACK_PREFIX}

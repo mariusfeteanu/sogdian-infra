@@ -1,0 +1,144 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: IAM roles used by web-analytics for glue
+
+Parameters:
+  Prefix:
+    Type: String
+
+Resources:
+
+  RoleGlueJsonToPqWebAnalytics:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: glue-json2pq-web-analytics
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - glue.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: Logs
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws-glue/jobs/error:*
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws-glue/jobs/output:*
+        - PolicyName: S3ReadJSONFiles
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:Get*
+                  - s3:ListBucket
+                Resource:
+                  - !Sub arn:aws:s3:::${Prefix}-delivery-web-event/web-event/*
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource:
+                  - !Sub arn:aws:s3:::${Prefix}-delivery-web-event
+                Condition:
+                  StringEquals:
+                    s3:prefix:
+                      - "web-event"
+                    s3:delimiter:
+                      - "/"
+        - PolicyName: S3WriteParquetFiles
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:Put*
+                  - s3:Delete*
+                  - s3:Get*
+                  - s3:AbortMultipartUpload
+                Resource:
+                  - !Sub arn:aws:s3:::${Prefix}-convert-web-event/*
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:ListBucketMultipartUploads
+                  - s3:AbortMultipartUpload
+                Resource:
+                  - !Sub arn:aws:s3:::${Prefix}-convert-web-event
+        - PolicyName: S3ReadScriptFiles
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource:
+                  - !Sub arn:aws:s3:::${Prefix}-infra/cloudformation/web-analytics/code/glue/*
+        - PolicyName: GlueRunJob
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - glue:GetJobBookmark
+                Resource:
+                  - '*'
+
+  RoleGlueCrawlerWebAnalytics:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: glue-crawler-web-analytics
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - glue.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: Logs
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws-glue/crawlers:*
+        - PolicyName: S3ReadConvertedFiles
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:GetObject
+                Resource:
+                  - !Sub arn:aws:s3:::${Prefix}-convert-web-event
+                  - !Sub arn:aws:s3:::${Prefix}-convert-web-event/*
+        - PolicyName: GlueFull
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - glue:*
+                Resource: '*'

@@ -1,0 +1,50 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: IAM entitities for group/user access
+
+Parameters:
+  BucketInfra:
+    Type: String
+  RepoInfraBaseName:
+    Type: String
+  EnvironmentType:
+    Type: String
+
+Mappings:
+  GroupPolicyMap:
+    GroupDevPolicy:
+      Development:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+      QA:
+        - arn:aws:iam::aws:policy/ReadOnlyAccess
+      UAT:
+        - arn:aws:iam::aws:policy/job-function/ViewOnlyAccess
+      Production: []
+
+    GroupQAPolicy:
+      Development: []
+      QA:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+      UAT:
+        - arn:aws:iam::aws:policy/job-function/ViewOnlyAccess
+      Production: []
+
+Resources:
+  # Groups
+  GroupAdmin:
+    Type: "AWS::IAM::Group"
+    Properties:
+      GroupName: admin
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+
+  GroupQA:
+    Type: "AWS::IAM::Group"
+    Properties:
+      GroupName: qa
+      ManagedPolicyArns: !FindInMap [GroupPolicyMap, GroupQAPolicy, !Ref EnvironmentType]
+
+  GroupDev:
+    Type: "AWS::IAM::Group"
+    Properties:
+      GroupName: dev
+      ManagedPolicyArns: !FindInMap [GroupPolicyMap, GroupDevPolicy, !Ref EnvironmentType]

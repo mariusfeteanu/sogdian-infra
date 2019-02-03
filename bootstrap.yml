@@ -1,0 +1,24 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Any resources needed to bootstrap the environment
+
+
+Parameters:
+  Prefix:
+    Type: String
+    Description: This will be prefixed to all created resources
+  BucketInfraParam:
+    Type: String
+    Default: infra
+    Description: The name for the initial bootstraping bucket. Should be the same as the base infra bucket.
+
+
+Resources:
+  BucketInfra:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      BucketName:
+        !Join ['-', [!Ref 'Prefix', !Ref 'BucketInfraParam']]

@@ -1,0 +1,152 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Top level template for an infra base stack. N.B. this is a "singleton" stack, you can only have one per account.
+
+Parameters:
+  Prefix:
+    Type: String
+    Description: This will be prefixed to all created resources
+  BucketInfraRoot:
+    Type: String
+    Default: infra
+    Description: Name of the bucket from the infra base, the prefix will be added automatically to it
+  RepoInfraBaseNameRoot:
+    Type: String
+    Default: infra
+    Description: Project for all the base AWS infrastructure, the prefix will be added automatically to it
+  RepoWebAnalyticsNameRoot:
+    Type: String
+    Default: web-analytics
+    Description: Project for all the base AWS infrastructure, the prefix will be added automatically to it
+  EnvironmentType:
+    Type: String
+    Default: Development
+    AllowedValues:
+      - Development
+      - QA
+      - UAT
+      - Production
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      -
+        Label:
+          default: "Environment"
+        Parameters:
+          - EnvironmentType
+      -
+        Label:
+          default: "Names"
+        Parameters:
+          - Prefix
+          - BucketInfraRoot
+          - RepoInfraBaseNameRoot
+          - RepoWebAnalyticsNameRoot
+    ParameterLabels:
+      EnvironmentType:
+        default: "Environment Type"
+      Prefix:
+        default: "Prefix"
+      BucketInfraRoot:
+        default: "Infra Bucket Name"
+      RepoInfraBaseNameRoot:
+        default: "Infra Git Repo Name"
+      RepoWebAnalyticsNameRoot:
+        default: "Web Analytics Git Repo Name"
+
+Resources:
+  StackIAMGroup:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:
+        !Sub
+          - https://s3.amazonaws.com/${BucketInfra}/cloudformation/infra-base/iam/group.yml
+          - {BucketInfra: !Join ['-', [!Ref 'Prefix', !Ref 'BucketInfraRoot']]}
+      Parameters:
+        BucketInfra: !Join ['-', [!Ref 'Prefix', !Ref 'BucketInfraRoot']]
+        RepoInfraBaseName: !Join ['-', [!Ref 'Prefix', !Ref 'RepoInfraBaseNameRoot']]
+        EnvironmentType: !Ref EnvironmentType
+
+  StackIAMRole:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:
+        !Sub
+          - https://s3.amazonaws.com/${BucketInfra}/cloudformation/infra-base/iam/role.yml
+          - {BucketInfra: !Join ['-', [!Ref 'Prefix', !Ref 'BucketInfraRoot']]}
+      Parameters:
+        Prefix: !Ref Prefix
+        BucketInfra: !Join ['-', [!Ref 'Prefix', !Ref 'BucketInfraRoot']]
+        RepoInfraBaseName: !Join ['-', [!Ref 'Prefix', !Ref 'RepoInfraBaseNameRoot']]
+        RepoWebAnalyticsName: !Join ['-', [!Ref 'Prefix', !Ref 'RepoWebAnalyticsNameRoot']]
+
+  StackCodeCommit:
+    Type: "AWS::CloudFormation::Stack"
+    DependsOn: StackIAMRole
+    Properties:
+      TemplateURL:
+        !Sub
+          - https://s3.amazonaws.com/${BucketInfra}/cloudformation/infra-base/code-commit.yml
+          - {BucketInfra: !Join ['-', [!Ref 'Prefix', !Ref 'BucketInfraRoot']]}
+      Parameters:
+        RepoInfraBaseName: !Join ['-', [!Ref 'Prefix', !Ref 'RepoInfraBaseNameRoot']]
+        RepoWebAnalyticsName: !Join ['-', [!Ref 'Prefix', !Ref 'RepoWebAnalyticsNameRoot']]
+        EnvironmentType: !Ref EnvironmentType
+
+  StackCodeBuildInfraBase:
+    Type: "AWS::CloudFormation::Stack"
+    DependsOn: StackIAMRole
+    Properties:
+      TemplateURL:
+        !Sub
+          - https://s3.amazonaws.com/${BucketInfra}/cloudformation/infra-base/code-build/infra-base.yml
+          - {BucketInfra: !Join ['-', [!Ref 'Prefix', !Ref 'BucketInfraRoot']]}
+      Parameters:
+        BucketInfra: !Join ['-', [!Ref 'Prefix', !Ref 'BucketInfraRoot']]
+        RepoInfraBaseName: !Join ['-', [!Ref 'Prefix', !Ref 'RepoInfraBaseNameRoot']]
+        EnvironmentType: !Ref EnvironmentType
+
+  StackCodePipelineInfraBase:
+    Type: "AWS::CloudFormation::Stack"
+    DependsOn:
+      - StackIAMRole
+      - StackCodeBuildInfraBase
+    Properties:
+      TemplateURL:
+        !Sub
+          - https://s3.amazonaws.com/${BucketInfra}/cloudformation/infra-base/code-pipeline/infra-base.yml
+          - {BucketInfra: !Join ['-', [!Ref 'Prefix', !Ref 'BucketInfraRoot']]}
+      Parameters:
+        Prefix: !Ref Prefix
+        BucketInfra: !Join ['-', [!Ref 'Prefix', !Ref 'BucketInfraRoot']]
+        RepoInfraBaseName: !Join ['-', [!Ref 'Prefix', !Ref 'RepoInfraBaseNameRoot']]
+        EnvironmentType: !Ref EnvironmentType
+
+  StackCodeBuildWebAnalytics:
+    Type: "AWS::CloudFormation::Stack"
+    DependsOn: StackIAMRole
+    Properties:
+      TemplateURL:
+        !Sub
+          - https://s3.amazonaws.com/${BucketInfra}/cloudformation/infra-base/code-build/web-analytics.yml
+          - {BucketInfra: !Join ['-', [!Ref 'Prefix', !Ref 'BucketInfraRoot']]}
+      Parameters:
+        BucketInfra: !Join ['-', [!Ref 'Prefix', !Ref 'BucketInfraRoot']]
+        RepoWebAnalyticsName: !Join ['-', [!Ref 'Prefix', !Ref 'RepoWebAnalyticsNameRoot']]
+        EnvironmentType: !Ref EnvironmentType
+
+  StackCodePipelineWebAnalytics:
+    Type: "AWS::CloudFormation::Stack"
+    DependsOn:
+      - StackIAMRole
+      - StackCodeBuildInfraBase
+    Properties:
+      TemplateURL:
+        !Sub
+          - https://s3.amazonaws.com/${BucketInfra}/cloudformation/infra-base/code-pipeline/web-analytics.yml
+          - {BucketInfra: !Join ['-', [!Ref 'Prefix', !Ref 'BucketInfraRoot']]}
+      Parameters:
+        BucketInfra: !Join ['-', [!Ref 'Prefix', !Ref 'BucketInfraRoot']]
+        RepoWebAnalyticsName: !Join ['-', [!Ref 'Prefix', !Ref 'RepoWebAnalyticsNameRoot']]
+        EnvironmentType: !Ref EnvironmentType
+        Prefix: !Ref Prefix

@@ -1,0 +1,56 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: IAM roles used by web-analytics for firehose
+
+Parameters:
+  Prefix:
+    Type: String
+
+Resources:
+
+  RoleKinesisDeliveryWebAnalytics:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: kinesis-delivery-web-analytics
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - firehose.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: GlueGetDeliveryTableVersions
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - glue:GetTableVersions
+                Resource: arn:aws:glue:region:account-id:table/delivery*/*
+        - PolicyName: S3KinesisDelivery
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:AbortMultipartUpload
+                  - s3:GetBucketLocation
+                  - s3:GetObject
+                  - s3:ListBucket
+                  - s3:ListBucketMultipartUploads
+                  - s3:PutObject
+                Resource:
+                  - !Sub arn:aws:s3:::${Prefix}-delivery-web-event
+                  - !Sub arn:aws:s3:::${Prefix}-delivery-web-event/*
+        - PolicyName: KinesisGetDeliveryRecords
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - kinesis:DescribeStream
+                  - kinesis:GetShardIterator
+                  - kinesis:GetRecords
+                Resource: !Sub arn:aws:kinesis:${AWS::Region}:${AWS::AccountId}:stream/kinesis-delivery-web-analytics

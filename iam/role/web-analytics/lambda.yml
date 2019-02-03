@@ -1,0 +1,99 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: IAM roles used by web-analytics for lambda
+
+Resources:
+
+  RoleKinesisDeliveryWebAnalytics:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: lambda-transfer-web-analytics
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: Logs
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/send-to-kinesis-web-analytics:*
+        - PolicyName: KinesisReadFromStreams
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - kinesis:SubscribeToShard
+                  - kinesis:ListShards
+                  - kinesis:PutRecords
+                  - kinesis:DescribeStreamConsumer
+                  - kinesis:GetShardIterator
+                  - kinesis:DescribeStream
+                  - kinesis:ListTagsForStream
+                  - kinesis:ListStreams
+                  - kinesis:PutRecord
+                  - kinesis:DescribeStreamSummary
+                  - kinesis:GetRecords
+                  - kinesis:DescribeLimits
+                  - kinesis:ListStreamConsumers
+                Resource: '*'
+        - PolicyName: FirehosePutRecords
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - firehose:PutRecord
+                  - firehose:DescribeDeliveryStream
+                  - firehose:PutRecordBatch
+                  - firehose:ListDeliveryStreams
+                Resource: '*'
+
+  RoleKinesisConvertJsonToParquet:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: lambda-convert-json-to-parquet
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: Logs
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/convert-json-to-parquet-web-analytics:*
+        - PolicyName: GlueStartJob
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - glue:StartJobRun
+                Resource: '*'

@@ -1,0 +1,62 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: IAM roles
+
+Parameters:
+  Prefix:
+    Type: String
+  BucketInfra:
+    Type: String
+  RepoInfraBaseName:
+    Type: String
+  RepoWebAnalyticsName:
+    Type: String
+
+Resources:
+
+  StackRolesInfraBaseCloudformation:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:
+        !Sub 'https://s3.amazonaws.com/${BucketInfra}/cloudformation/infra-base/iam/role/infra-base/cloudformation.yml'
+      Parameters:
+        Prefix: !Ref 'Prefix'
+
+  StackRolesInfraBaseCodebuild:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:
+        !Sub 'https://s3.amazonaws.com/${BucketInfra}/cloudformation/infra-base/iam/role/infra-base/codebuild.yml'
+      Parameters:
+        BucketInfra: !Ref 'BucketInfra'
+
+  StackRolesInfraBaseCodepipeline:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:
+        !Sub 'https://s3.amazonaws.com/${BucketInfra}/cloudformation/infra-base/iam/role/infra-base/codepipeline.yml'
+      Parameters:
+        BucketInfra: !Ref 'BucketInfra'
+        RepoInfraBaseName: !Ref 'RepoInfraBaseName'
+        RepoWebAnalyticsName: !Ref 'RepoWebAnalyticsName'
+
+  StackRolesWebAnalyticsFirehose:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:
+        !Sub 'https://s3.amazonaws.com/${BucketInfra}/cloudformation/infra-base/iam/role/web-analytics/firehose.yml'
+      Parameters:
+        Prefix: !Ref 'Prefix'
+
+  StackRoleGlueJsonToPqWebAnalytics:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:
+        !Sub 'https://s3.amazonaws.com/${BucketInfra}/cloudformation/infra-base/iam/role/web-analytics/glue.yml'
+      Parameters:
+        Prefix: !Ref 'Prefix'
+
+  StackRolesWebAnalyticsLambda:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:
+        !Sub 'https://s3.amazonaws.com/${BucketInfra}/cloudformation/infra-base/iam/role/web-analytics/lambda.yml'

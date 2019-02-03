@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Project to deploy the infra stacks
+
+Parameters:
+  BucketInfra:
+    Type: String
+  RepoInfraBaseName:
+    Type: String
+  EnvironmentType:
+    Type: String
+
+Resources:
+  PipelineInfraBase:
+    Type: "AWS::CodeBuild::Project"
+    Properties:
+      Name: infra-base
+      Tags:
+        - Key: "EnvironmentType"
+          Value: !Ref EnvironmentType
+      Artifacts:
+        Type: NO_ARTIFACTS
+      BadgeEnabled: False
+      Description: Project to deploy the infra stacks
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/ubuntu-base:14.04
+        Type: LINUX_CONTAINER
+      ServiceRole: !Sub arn:aws:iam::${AWS::AccountId}:role/code-build-infra
+      Source:
+        BuildSpec:
+          !Sub |
+          version: 0.2
+          phases:
+            build:
+              commands:
+                - pwd
+                - aws s3 sync --exclude "*" --include "*.yml" --delete . s3://${BucketInfra}/cloudformation/infra-base/
+        GitCloneDepth: 1
+        Type: CODECOMMIT
+        Location: !Sub https://git-codecommit.${AWS::Region}.amazonaws.com/v1/repos/${RepoInfraBaseName}
