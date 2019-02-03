@@ -85,13 +85,14 @@ Resources:
                   - s3:GetObject
                 Resource:
                   - !Sub arn:aws:s3:::${Prefix}-infra/cloudformation/web-analytics/code/glue/*
-        - PolicyName: GlueRunJob
+        - PolicyName: GlueRunJobAndCrawl
           PolicyDocument:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
                 Action:
                   - glue:GetJobBookmark
+                  - glue:StartCrawler
                 Resource:
                   - '*'
 
