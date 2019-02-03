@@ -15,9 +15,9 @@ export STACK_PREFIX=sogdian-dev
 or, for Windows Powershell:
 
 ```bash
-  - $env:AWS_PROFILE="admin-dev"
-  - $env:AWS_DEFAULT_REGION="eu-west-1"
-  - $env:STACK_PREFIX="sogdian-dev"
+$env:AWS_PROFILE="admin-dev"
+$env:AWS_DEFAULT_REGION="eu-west-1"
+$env:STACK_PREFIX="sogdian-dev"
 ```
 
 The variables above are specific to your deployment.
