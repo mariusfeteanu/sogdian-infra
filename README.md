@@ -27,6 +27,9 @@ All these commands below are tested on Linux. If you have another OS, you can tr
   - `docker-compose.exe run devenv`
 
 ## Bootstrapping
+
+I recommend doing the following by hand. If you don't want to do that, just source `./script/deploy.sh`.
+
 1. Deploy the boostrap stack
 ```bash
 # create the stack
@@ -76,6 +79,8 @@ git push --set-upstream origin master
 
 
 ## Cleanup
+
+I recommend doing the following by hand. If you don't want to do that, just source `./script/purge.sh`.
 
 We need to remove the stacks in the reverse order they were created. This includes any stacks created by code pipeline, which in this version just deploys it does not clean up.
 
