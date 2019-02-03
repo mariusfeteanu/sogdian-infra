@@ -1,6 +1,6 @@
 ## Prerequisites
 
-You need a privileged account to bootstrap the project. If you don't have one, you need to work out for yourself the permissions needed for bootstrapping.
+You need a privileged AWS user in your account to bootstrap the project. If you don't have one, you need to work out for yourself the permissions needed for bootstrapping.
 Only one copy of this project can be deployed in one account.
 Multiple copies can be used if you use different accounts, and a different prefix param set in each.
 
